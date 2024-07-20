@@ -27,14 +27,23 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
 
 file(GLOB SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
 
+#add_executable(${PROJECT_NAME}
+#    main.cc
+#    postprocess.cc
+#    ${rknpu_yolov5_file}
+#)
 
-add_executable(${PROJECT_NAME}
-    main.cc
-    postprocess.cc
-    ${rknpu_yolov5_file}
+add_library(${PROJECT_NAME} STATIC
+        postprocess.cc
+        ${rknpu_yolov5_file}
 )
 
-target_link_libraries(${PROJECT_NAME}
+if (TARGET_SOC STREQUAL "rv1106")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC RV1106_1103)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../3rdparty/allocator/dma)
+endif ()
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
     imageutils
     fileutils
     imagedrawing    
@@ -43,7 +52,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${PROJECT_NAME} PUBLIC
     log
 )
 endif()
@@ -51,10 +60,10 @@ endif()
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-    target_link_libraries(${PROJECT_NAME} Threads::Threads)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${LIBRKNNRT_INCLUDES}
 )

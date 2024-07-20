@@ -7,11 +7,9 @@
 #include "common.h"
 #include "image_utils.h"
 
-#define OBJ_NAME_MAX_SIZE 64
 #define OBJ_NUMB_MAX_SIZE 128
 #define OBJ_CLASS_NUM 80
 #define NMS_THRESH 0.45
-#define BOX_THRESH 0.25
 #define PROP_BOX_SIZE (5 + OBJ_CLASS_NUM)
 
 // class rknn_app_context_t;
@@ -28,7 +26,8 @@ typedef struct {
     object_detect_result results[OBJ_NUMB_MAX_SIZE];
 } object_detect_result_list;
 
-int init_post_process();
+int init_post_process(const char *lablesFilePath);
+
 void deinit_post_process();
 char *coco_cls_to_name(int cls_id);
 int post_process(rknn_app_context_t *app_ctx, void *outputs, letterbox_t *letter_box, float conf_threshold, float nms_threshold, object_detect_result_list *od_results);

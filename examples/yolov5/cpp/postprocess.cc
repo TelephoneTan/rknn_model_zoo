@@ -23,7 +23,6 @@
 
 #include <set>
 #include <vector>
-#define LABEL_NALE_TXT_PATH "./model/coco_80_labels_list.txt"
 
 static char *labels[OBJ_CLASS_NUM];
 
@@ -222,8 +221,7 @@ static int process_u8(uint8_t *input, int *anchor, int grid_h, int grid_w, int h
             for (int j = 0; j < grid_w; j++)
             {
                 uint8_t box_confidence = input[(PROP_BOX_SIZE * a + 4) * grid_len + i * grid_w + j];
-                if (box_confidence >= thres_u8)
-                {
+                if (box_confidence >= thres_u8) {
                     int offset = (PROP_BOX_SIZE * a) * grid_len + i * grid_w + j;
                     uint8_t *in_ptr = input + offset;
                     float box_x = (deqnt_affine_u8_to_f32(*in_ptr, zp, scale)) * 2.0 - 0.5;
@@ -248,8 +246,17 @@ static int process_u8(uint8_t *input, int *anchor, int grid_h, int grid_w, int h
                             maxClassProbs = prob;
                         }
                     }
-                    if (maxClassProbs > thres_u8)
-                    {
+
+                    if (maxClassProbs <= thres_u8) {
+                        continue;
+                    }
+
+                    switch (maxClassId) {
+                        case 0:
+                            break;
+                        default:
+                            continue;
+                    } {
                         objProbs.push_back((deqnt_affine_u8_to_f32(maxClassProbs, zp, scale)) * (deqnt_affine_u8_to_f32(box_confidence, zp, scale)));
                         classId.push_back(maxClassId);
                         validCount++;
@@ -305,8 +312,17 @@ static int process_i8(int8_t *input, int *anchor, int grid_h, int grid_w, int he
                             maxClassProbs = prob;
                         }
                     }
-                    if (maxClassProbs > thres_i8)
-                    {
+
+                    if (maxClassProbs <= thres_i8) {
+                        continue;
+                    }
+
+                    switch (maxClassId) {
+                        case 0:
+                            break;
+                        default:
+                            continue;
+                    } {
                         objProbs.push_back((deqnt_affine_to_f32(maxClassProbs, zp, scale)) * (deqnt_affine_to_f32(box_confidence, zp, scale)));
                         classId.push_back(maxClassId);
                         validCount++;
@@ -353,7 +369,16 @@ static int process_i8_rv1106(int8_t *input, int *anchor, int grid_h, int grid_w,
                     float class_prob_f32 = deqnt_affine_to_f32(maxClassProbs, zp, scale);
                     float limit_score = box_conf_f32 * class_prob_f32;
 
-                    if (limit_score > threshold) {
+                    if (limit_score <= threshold) {
+                        continue;
+                    }
+
+                    switch (maxClassId) {
+                        case 0:
+                            break;
+                        default:
+                            continue;
+                    } {
                         float box_x, box_y, box_w, box_h;
 
                         box_x = deqnt_affine_to_f32(hw_ptr[0], zp, scale) * 2.0 - 0.5;
@@ -426,8 +451,17 @@ static int process_fp32(float *input, int *anchor, int grid_h, int grid_w, int h
                             maxClassProbs = prob;
                         }
                     }
-                    if (maxClassProbs > threshold)
-                    {
+
+                    if (maxClassProbs <= threshold) {
+                        continue;
+                    }
+
+                    switch (maxClassId) {
+                        case 0:
+                            break;
+                        default:
+                            continue;
+                    } {
                         objProbs.push_back(maxClassProbs * box_confidence);
                         classId.push_back(maxClassId);
                         validCount++;
@@ -556,21 +590,17 @@ int post_process(rknn_app_context_t *app_ctx, void *outputs, letterbox_t *letter
     return 0;
 }
 
-int init_post_process()
-{
+int init_post_process(const char *const lablesFilePath) {
     int ret = 0;
-    ret = loadLabelName(LABEL_NALE_TXT_PATH, labels);
-    if (ret < 0)
-    {
-        printf("Load %s failed!\n", LABEL_NALE_TXT_PATH);
+    ret = loadLabelName(lablesFilePath, labels);
+    if (ret < 0) {
+        printf("Load %s failed!\n", lablesFilePath);
         return -1;
     }
     return 0;
 }
 
-char *coco_cls_to_name(int cls_id)
-{
-
+char *coco_cls_to_name(int cls_id) {
     if (cls_id >= OBJ_CLASS_NUM)
     {
         return "null";

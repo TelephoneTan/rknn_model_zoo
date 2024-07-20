@@ -182,13 +182,16 @@ int release_yolov5_model(rknn_app_context_t *app_ctx)
     return 0;
 }
 
-int inference_yolov5_model(rknn_app_context_t *app_ctx, image_buffer_t *img, object_detect_result_list *od_results)
-{
+int inference_yolov5_model(
+    rknn_app_context_t *app_ctx,
+    image_buffer_t *img,
+    float const confidenceThreshold,
+    object_detect_result_list *od_results
+) {
     int ret;
     image_buffer_t dst_img;
     letterbox_t letter_box;
     const float nms_threshold = NMS_THRESH;      // Default NMS threshold
-    const float box_conf_threshold = BOX_THRESH; // Default box threshold
     int bg_color = 114;
     
     if ((!app_ctx) || !(img) || (!od_results))
@@ -228,7 +231,7 @@ int inference_yolov5_model(rknn_app_context_t *app_ctx, image_buffer_t *img, obj
     }
 
     // Post Process
-    post_process(app_ctx, app_ctx->output_mems, &letter_box, box_conf_threshold, nms_threshold, od_results);
+    post_process(app_ctx, app_ctx->output_mems, &letter_box, confidenceThreshold, nms_threshold, od_results);
 out:
     return ret;
 }
